@@ -11,6 +11,7 @@ use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 use jojoe77777\FormAPI\SimpleForm;
+use jojoe77777\FormAPI\CustomForm;
 
 class Main extends PluginBase implements Listener {
 
