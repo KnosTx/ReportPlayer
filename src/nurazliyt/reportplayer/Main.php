@@ -10,6 +10,7 @@ use pocketmine\form\Form;
 use pocketmine\playet\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
+use jojoe77777\FormAPI\SimpleForm
 
 class Main extends PluginBase implements Listener {
 
