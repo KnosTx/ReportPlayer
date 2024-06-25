@@ -11,7 +11,6 @@ use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 use jojoe77777\FormAPI\CustomForm;
-use pocketmine\world\World;
 
 class Main extends PluginBase implements Listener {
 
@@ -35,8 +34,8 @@ class Main extends PluginBase implements Listener {
 
     public function sendReportForm(Player $player, Player $targetPlayer) {
         $formApi = $this->getServer()->getPluginManager()->getPlugin("FormAPI");
-        if($formApi !== null) {
-            $form = $formApi->createCustomForm(function (Player $player, ?array $data) use ($targetPlayer) {
+        if($formApi !== null && $formApi->isEnabled()) {
+            $form = new CustomForm(function (Player $player, ?array $data) use ($targetPlayer) {
                 if ($data !== null) {
                     // Handle form response, e.g., add report to queue
                     $this->addToReportQueue($player, $targetPlayer, $data[1]);
@@ -49,7 +48,7 @@ class Main extends PluginBase implements Listener {
             // Add a text input for additional details
             $form->addInput("Additional details (optional):");
 
-            $form->sendToPlayer($player);
+            $player->sendForm($form);
         } else {
             $player->sendMessage(TextFormat::RED . "FormAPI plugin is not installed.");
         }
@@ -83,7 +82,7 @@ class Main extends PluginBase implements Listener {
             }
             return true;
         } elseif ($command->getName() === "reportlist") {
-            if ($sender->isOp()) {
+            if ($sender instanceof Player && $sender->hasPermission("reportplayer.viewlist")) {
                 // Display a list of pending reports to admins
                 $sender->sendMessage("Pending Reports:");
                 foreach ($this->reportQueue as $index => $report) {
