@@ -15,10 +15,13 @@ use jojoe77777\FormAPI\CustomForm;
 class Main extends PluginBase implements Listener {
 
     private $reportQueue = [];
+    private $messages = [];
+    private $exemptPlayers = [];
 
     public function onEnable(): void {
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->saveDefaultConfig();
+        $this->loadConfiguration();
         $this->loadReportsFromFile();
     }
 
@@ -34,6 +37,11 @@ class Main extends PluginBase implements Listener {
     }
 
     public function sendReportForm(Player $player, Player $targetPlayer) {
+        if (in_array($targetPlayer->getName(), $this->exemptPlayers)) {
+            $player->sendMessage(TextFormat::RED . "You cannot report this player.");
+            return;
+        }
+
         $form = new CustomForm(function (Player $player, ?array $data) use ($targetPlayer) {
             if ($data !== null) {
                 // Handle form response, e.g., add report to queue
@@ -43,10 +51,7 @@ class Main extends PluginBase implements Listener {
 
         $form->setTitle("Report Player");
         $form->addLabel("You are reporting " . $targetPlayer->getName() . ". Please provide details below.");
-
-        // Add a text input for additional details
         $form->addInput("Additional details (optional):");
-
         $player->sendForm($form);
     }
 
@@ -56,7 +61,7 @@ class Main extends PluginBase implements Listener {
             'reportedPlayer' => $reportedPlayer->getName(),
             'details' => $details,
         ];
-        $reporter->sendMessage(TextFormat::GREEN . "Report submitted successfully.");
+        $reporter->sendMessage(TextFormat::GREEN . $this->messages['reportSuccess']);
     }
 
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
@@ -65,13 +70,13 @@ class Main extends PluginBase implements Listener {
                 if (count($args) === 1) {
                     $reportedPlayer = $this->getServer()->getPlayerExact($args[0]);
                     if ($reportedPlayer !== null && $reportedPlayer->isOnline()) {
-                        // Implement logic to show report UI
+                        // Show report UI
                         $this->sendReportForm($sender, $reportedPlayer);
                     } else {
-                        $sender->sendMessage(TextFormat::RED . "Player not found or not online.");
+                        $sender->sendMessage(TextFormat::RED . $this->messages['playerNotFound']);
                     }
                 } else {
-                    $sender->sendMessage(TextFormat::RED . "Usage: /report <player>");
+                    $sender->sendMessage(TextFormat::RED . $this->messages['usageReport']);
                 }
             } else {
                 $sender->sendMessage(TextFormat::RED . "This command can only be used in-game.");
@@ -79,13 +84,16 @@ class Main extends PluginBase implements Listener {
             return true;
         } elseif ($command->getName() === "reportlist") {
             if ($sender instanceof Player && $sender->hasPermission("reportplayer.viewlist")) {
-                // Display a list of pending reports to admins
-                $sender->sendMessage("Pending Reports:");
-                foreach ($this->reportQueue as $index => $report) {
-                    $sender->sendMessage(($index + 1) . ". " . $report['reporter'] . " reported " . $report['reportedPlayer'] . ": " . $report['details']);
+                $sender->sendMessage($this->messages['reportListHeader']);
+                if (empty($this->reportQueue)) {
+                    $sender->sendMessage(TextFormat::YELLOW . $this->messages['noReports']);
+                } else {
+                    foreach ($this->reportQueue as $index => $report) {
+                        $sender->sendMessage(($index + 1) . ". " . $report['reporter'] . " reported " . $report['reportedPlayer'] . ": " . $report['details']);
+                    }
                 }
             } else {
-                $sender->sendMessage(TextFormat::RED . "You do not have permission to use this command.");
+                $sender->sendMessage(TextFormat::RED . $this->messages['noPermission']);
             }
             return true;
         }
@@ -93,6 +101,12 @@ class Main extends PluginBase implements Listener {
     }
 
     // New methods start here
+
+    private function loadConfiguration() {
+        $config = yaml_parse_file($this->getDataFolder() . "playerreport.yml");
+        $this->messages = $config['messages'] ?? [];
+        $this->exemptPlayers = $config['exemptPlayers'] ?? [];
+    }
 
     public function processReports() {
         foreach ($this->reportQueue as $report) {
@@ -108,17 +122,17 @@ class Main extends PluginBase implements Listener {
 
     public function clearReportQueue() {
         $this->reportQueue = [];
-        $this->getServer()->broadcastMessage(TextFormat::YELLOW . "All reports have been cleared.");
+        $this->getServer()->broadcastMessage(TextFormat::YELLOW . $this->messages['allReportsCleared']);
     }
 
     public function saveReportsToFile() {
-        $filePath = $this->getDataFolder() . "reports.json";
+        $filePath = $this->getDataFolder() . ($this->messages['reportFileName'] ?? "reports.json");
         file_put_contents($filePath, json_encode($this->reportQueue));
         $this->getLogger()->info("Reports have been saved to file.");
     }
 
     public function loadReportsFromFile() {
-        $filePath = $this->getDataFolder() . "reports.json";
+        $filePath = $this->getDataFolder() . ($this->messages['reportFileName'] ?? "reports.json");
         if (file_exists($filePath)) {
             $this->reportQueue = json_decode(file_get_contents($filePath), true);
             $this->getLogger()->info("Reports have been loaded from file.");
@@ -132,6 +146,8 @@ class Main extends PluginBase implements Listener {
     }
 
     public function onDisable(): void {
-        $this->saveReportsToFile();
+        if ($this->messages['saveReportsToFile'] ?? true) {
+            $this->saveReportsToFile();
+        }
     }
 }
