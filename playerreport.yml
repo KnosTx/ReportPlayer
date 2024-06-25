@@ -1,0 +1,25 @@
+# playerreport.yml
+# Configuration for the ReportPlayer plugin
+
+# List of players who cannot be reported (e.g., admins or VIPs)
+exemptPlayers:
+  - Player1
+  - Player2
+  - Player3
+
+# Messages sent to players when they report another player
+messages:
+  reportSuccess: "Your report has been successfully submitted."
+  reportFail: "Unable to report this player at this time."
+  reportListHeader: "Pending Reports:"
+  noReports: "There are no pending reports at this time."
+  noPermission: "You do not have permission to use this command."
+  playerNotFound: "Player not found or not online."
+  usageReport: "Usage: /report <player>"
+  usageReportList: "Usage: /reportlist"
+  allReportsCleared: "All reports have been cleared."
+
+# Other settings
+settings:
+  saveReportsToFile: true
+  reportFileName: "reports.json"
