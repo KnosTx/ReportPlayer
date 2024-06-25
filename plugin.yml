@@ -1,31 +1,16 @@
 name: ReportPlayer
+main: nurazliyt\reportplayer\Main
 version: 1.0.0
 api: 5.0.0
-author: nurazliyt
-main: nurazliyt\reportplayer\Main
-
-# Deskripsi plugin
-description: A plugin for reporting players with admin approval.
-
-# Commands
+author: NurAzliYT
 commands:
   report:
     description: Report a player
     usage: /report <player>
   reportlist:
-    description: View pending reports
+    description: List all pending reports
     usage: /reportlist
-
-# Konfigurasi
-config:
-  reasons:
-    - "Inappropriate behavior"
-    - "Cheating"
-    - "Spamming"
-    - "Other"
-
-# Perizinan
 permissions:
-  example.permission: # Ganti dengan perizinan yang sesuai
-    description: Permission description
+  reportplayer.viewlist:
+    description: "Allows viewing the report list"
     default: op
