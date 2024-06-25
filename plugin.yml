@@ -6,11 +6,14 @@ author: NurAzliYT
 commands:
   report:
     description: Report a player
-    usage: /report <player>
+    permission: reportplayer.commands
   reportlist:
     description: List all pending reports
-    usage: /reportlist
+    permission: reportplayer.viewlist
 permissions:
+  reportplayer.commands:
+    description: "Allows player to report player"
+    default: true
   reportplayer.viewlist:
-    description: "Allows viewing the report list"
+    description: "Allows operator viewing the report list"
     default: op
