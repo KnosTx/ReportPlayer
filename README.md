@@ -12,7 +12,7 @@ ReportPlayer is a Minecraft plugin that facilitates reporting of player miscondu
 
 To install the ReportPlayer plugin, follow these steps:
 
-1. Download the plugin `.phar` file from [GitHub releases](#).
+1. Download the plugin `.phar` file from [Poggit releases](https://poggit.pmmp.io/p/ReportPlayer).
 2. Place the downloaded `.phar` file into your server's `plugins` folder.
 3. Start or reload your server. ReportPlayer should be loaded automatically.
 
@@ -81,7 +81,7 @@ settings:
 
 ### Support
 
-For issues or feature requests, please visit our [GitHub repository](#) and create an issue. We welcome community contributions and feedback!
+For issues or feature requests, please visit our [GitHub repository](https://github.com/NurAzliYT/ReportPlayer) and create an issue. We welcome community contributions and feedback!
 
 ### License
 
