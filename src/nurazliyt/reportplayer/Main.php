@@ -19,6 +19,7 @@ class Main extends PluginBase implements Listener {
     public function onEnable(): void {
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->saveDefaultConfig();
+        $this->loadReportsFromFile();
     }
 
     public function onPlayerInteract(PlayerInteractEvent $event) {
@@ -33,25 +34,20 @@ class Main extends PluginBase implements Listener {
     }
 
     public function sendReportForm(Player $player, Player $targetPlayer) {
-        $formApi = $this->getServer()->getPluginManager()->getPlugin("FormAPI");
-        if($formApi !== null && $formApi->isEnabled()) {
-            $form = new CustomForm(function (Player $player, ?array $data) use ($targetPlayer) {
-                if ($data !== null) {
-                    // Handle form response, e.g., add report to queue
-                    $this->addToReportQueue($player, $targetPlayer, $data[1]);
-                }
-            });
+        $form = new CustomForm(function (Player $player, ?array $data) use ($targetPlayer) {
+            if ($data !== null) {
+                // Handle form response, e.g., add report to queue
+                $this->addToReportQueue($player, $targetPlayer, $data[1]);
+            }
+        });
 
-            $form->setTitle("Report Player");
-            $form->addLabel("You are reporting " . $targetPlayer->getName() . ". Please provide details below.");
+        $form->setTitle("Report Player");
+        $form->addLabel("You are reporting " . $targetPlayer->getName() . ". Please provide details below.");
 
-            // Add a text input for additional details
-            $form->addInput("Additional details (optional):");
+        // Add a text input for additional details
+        $form->addInput("Additional details (optional):");
 
-            $player->sendForm($form);
-        } else {
-            $player->sendMessage(TextFormat::RED . "FormAPI plugin is not installed.");
-        }
+        $player->sendForm($form);
     }
 
     private function addToReportQueue(Player $reporter, Player $reportedPlayer, string $details) {
@@ -94,5 +90,48 @@ class Main extends PluginBase implements Listener {
             return true;
         }
         return false;
+    }
+
+    // New methods start here
+
+    public function processReports() {
+        foreach ($this->reportQueue as $report) {
+            $reporter = $this->getServer()->getPlayerExact($report['reporter']);
+            $reportedPlayer = $this->getServer()->getPlayerExact($report['reportedPlayer']);
+
+            if ($reportedPlayer !== null && $reporter !== null) {
+                $reportedPlayer->sendMessage(TextFormat::RED . "You have been reported by " . $reporter->getName() . ".");
+                $reporter->sendMessage(TextFormat::GREEN . "Your report against " . $reportedPlayer->getName() . " has been processed.");
+            }
+        }
+    }
+
+    public function clearReportQueue() {
+        $this->reportQueue = [];
+        $this->getServer()->broadcastMessage(TextFormat::YELLOW . "All reports have been cleared.");
+    }
+
+    public function saveReportsToFile() {
+        $filePath = $this->getDataFolder() . "reports.json";
+        file_put_contents($filePath, json_encode($this->reportQueue));
+        $this->getLogger()->info("Reports have been saved to file.");
+    }
+
+    public function loadReportsFromFile() {
+        $filePath = $this->getDataFolder() . "reports.json";
+        if (file_exists($filePath)) {
+            $this->reportQueue = json_decode(file_get_contents($filePath), true);
+            $this->getLogger()->info("Reports have been loaded from file.");
+        } else {
+            $this->getLogger()->warning("No report file found to load.");
+        }
+    }
+
+    public function getReportCount() {
+        return count($this->reportQueue);
+    }
+
+    public function onDisable(): void {
+        $this->saveReportsToFile();
     }
 }
